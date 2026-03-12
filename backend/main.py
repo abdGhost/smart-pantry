@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 import httpx
@@ -926,14 +926,16 @@ async def create_pantry_item(
     shelf_life = None
     if payload.expiry_date is not None:
         expiry_date = payload.expiry_date
+        if expiry_date.tzinfo is None:
+            expiry_date = expiry_date.replace(tzinfo=timezone.utc)
         if payload.estimated_expiry_days is not None:
             shelf_life = timedelta(days=payload.estimated_expiry_days)
         else:
-            delta = expiry_date - datetime.utcnow()
+            delta = expiry_date - datetime.now(timezone.utc)
             shelf_life = delta if delta.total_seconds() > 0 else timedelta(0)
     elif payload.estimated_expiry_days is not None:
         shelf_life = timedelta(days=payload.estimated_expiry_days)
-        expiry_date = datetime.utcnow() + shelf_life
+        expiry_date = datetime.now(timezone.utc) + shelf_life
 
     item = PantryItemORM(
         user_id=user_id,
@@ -979,7 +981,7 @@ async def update_pantry_item(
         orm.estimated_expiry_days = payload.estimated_expiry_days
         shelf_life = timedelta(days=payload.estimated_expiry_days)
         orm.shelf_life = shelf_life
-        orm.expiry_date = datetime.utcnow() + shelf_life
+        orm.expiry_date = datetime.now(timezone.utc) + shelf_life
 
     db.add(orm)
     await db.commit()
@@ -1041,7 +1043,7 @@ async def ingest_receipt_text(
         shelf_life = None
         if it.estimated_expiry_days is not None:
             shelf_life = timedelta(days=it.estimated_expiry_days)
-            expiry_date = datetime.utcnow() + shelf_life
+            expiry_date = datetime.now(timezone.utc) + shelf_life
 
         to_create.append(
             PantryItemORM(
@@ -1259,7 +1261,7 @@ async def upload_receipt_image(
         shelf_life = None
         if it.estimated_expiry_days is not None:
             shelf_life = timedelta(days=it.estimated_expiry_days)
-            expiry_date = datetime.utcnow() + shelf_life
+            expiry_date = datetime.now(timezone.utc) + shelf_life
         to_create.append(
             PantryItemORM(
                 user_id=user_id,

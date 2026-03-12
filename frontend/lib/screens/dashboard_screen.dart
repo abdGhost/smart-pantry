@@ -327,33 +327,23 @@ List<FoodItem> _computeExpiringSoon(List<PantryItem> items) {
 
   final now = DateTime.now();
 
-  // Map pantry items into FoodItem view models, keeping only those that are
-  // already expired or expiring within the next 14 days, then sort by soonest.
-  final mapped = <FoodItem>[];
-  for (final p in items) {
+  // Map all pantry items into FoodItem view models, sort by soonest expiry.
+  final mapped = items.map((p) {
     final expiry = p.expiryDate ??
         now.add(
           Duration(days: p.estimatedExpiryDays ?? 365),
         );
     final rawDaysLeft = expiry.difference(now).inDays;
-
-    // Show items that are expired (rawDaysLeft < 0) or due within 14 days.
-    if (rawDaysLeft > 14) {
-      continue;
-    }
-
     final clampedDaysLeft = rawDaysLeft.clamp(0, 365 * 5);
 
-    mapped.add(
-      FoodItem(
-        id: p.id.toString(),
-        name: p.itemName,
-        daysLeft: clampedDaysLeft,
-        category: p.category ?? 'Pantry',
-        expiryDate: expiry,
-      ),
+    return FoodItem(
+      id: p.id.toString(),
+      name: p.itemName,
+      daysLeft: clampedDaysLeft,
+      category: p.category ?? 'Pantry',
+      expiryDate: expiry,
     );
-  }
+  }).toList();
 
   mapped.sort((a, b) {
     final aDate = a.expiryDate ?? now.add(Duration(days: a.daysLeft));
