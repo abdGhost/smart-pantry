@@ -1,0 +1,32 @@
+### Python / FastAPI backend
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/*.sqlite
+backend/*.db
+backend/.env
+backend/.env.*
+
+### Flutter / Dart frontend
+frontend/.dart_tool/
+frontend/.packages
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.metadata
+frontend/build/
+frontend/coverage/
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/ios/Flutter/Flutter.framework/
+frontend/ios/Flutter/Flutter.podspec
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/app/release/
+
+### OS / editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+
