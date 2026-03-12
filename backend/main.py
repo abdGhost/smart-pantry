@@ -1098,12 +1098,21 @@ async def recipe_suggestions(
             ingredients=ingredient_names or ["demo"],
             client=client,
             settings=settings,
+            max_results=30,
         )
+
+    # When pantry is empty, return no recipes (no Spoonacular call).
+    if not ingredient_names:
+        return []
+
+    # Limit recipe count based on pantry size: more items = more suggestions, capped at 30.
+    max_results = min(30, max(8, 4 + 2 * len(ingredient_names)))
 
     return await fetch_spoonacular_recipes(
         ingredients=ingredient_names,
         client=client,
         settings=settings,
+        max_results=max_results,
     )
 
 
