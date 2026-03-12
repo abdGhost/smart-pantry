@@ -54,6 +54,9 @@ class RecipeResultsScreen extends ConsumerWidget {
     final recipesAsync = ref.watch(dashboardRecipesProvider);
     final searchQuery = ref.watch(recipeSearchQueryProvider);
     final filters = ref.watch(recipeFiltersProvider);
+    final userId = ref.watch(userIdProvider);
+    final pantryState = ref.watch(pantryNotifierProvider(userId));
+    final pantryNames = pantryState.items.map((i) => i.itemName).toList();
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final r = Responsive.of(context);
 
@@ -97,19 +100,40 @@ class RecipeResultsScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Matched from what\'s already in your pantry.',
+                          pantryNames.isEmpty
+                              ? 'Add pantry items to see matched recipes.'
+                              : 'Recipes matched to your pantry:',
                           style: r.bodySmallStyle(context, color: AppColors.charcoalText.withOpacity(0.75)),
                         ),
-                        SizedBox(height: r.isNarrow ? 8 : 10),
-                        Wrap(
-                          spacing: r.isNarrow ? 6 : 8,
-                          runSpacing: 4,
-                          children: const [
-                            _FilterChipLabel(label: 'Fast'),
-                            _FilterChipLabel(label: 'Vegetarian'),
-                            _FilterChipLabel(label: 'Most Ingredients'),
-                          ],
-                        ),
+                        if (pantryNames.isNotEmpty) ...[
+                          SizedBox(height: r.isNarrow ? 6 : 8),
+                          Wrap(
+                            spacing: r.isNarrow ? 6 : 8,
+                            runSpacing: 4,
+                            children: pantryNames
+                                .take(12)
+                                .map((name) => _IngredientChip(label: name))
+                                .toList(),
+                          ),
+                          SizedBox(height: r.isNarrow ? 8 : 10),
+                          Text(
+                            'Filter by:',
+                            style: r.labelStyle(context, fontSize: 11).copyWith(
+                              color: AppColors.charcoalText.withOpacity(0.6),
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Wrap(
+                            spacing: r.isNarrow ? 6 : 8,
+                            runSpacing: 4,
+                            children: const [
+                              _FilterChipLabel(label: 'Fast'),
+                              _FilterChipLabel(label: 'Vegetarian'),
+                              _FilterChipLabel(label: 'High match'),
+                            ],
+                          ),
+                        ] else
+                          SizedBox(height: r.isNarrow ? 6 : 8),
                       ],
                     ),
                   ),
@@ -420,6 +444,38 @@ class _FilterPill extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IngredientChip extends StatelessWidget {
+  const _IngredientChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = Responsive.of(context);
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: r.isNarrow ? 8 : 10,
+        vertical: r.isNarrow ? 4 : 5,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.accentOrange.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppColors.accentOrange.withOpacity(0.4),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        label,
+        style: r.labelStyle(context, fontSize: 11).copyWith(
+          color: AppColors.charcoalText,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

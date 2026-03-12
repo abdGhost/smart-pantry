@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/device_user_id.dart';
 import '../models/recipe_model.dart';
 import '../models/recipe_details_model.dart';
 
@@ -286,11 +287,14 @@ final isOnlineProvider = StateProvider<bool>((ref) {
   return true;
 });
 
-/// In a real app this would come from authentication. For now we use
-/// a fixed user id so backend calls group pantry items correctly.
-// Temporary "real user" id for this device. Change this string to test
-// different users; each id gets its own pantry on the backend.
-final userIdProvider = Provider<String>((ref) => 'guest-device-1');
+/// Per-device user ID: generated once per installation and stored locally.
+/// Each user/device sees only their own pantry and recipes.
+final deviceUserIdProvider = FutureProvider<String>((ref) => getOrCreateDeviceUserId());
+
+/// Current user ID for API calls. Empty until device ID is loaded.
+final userIdProvider = Provider<String>((ref) {
+  return ref.watch(deviceUserIdProvider).valueOrNull ?? '';
+});
 
 class PantryNotifier extends StateNotifier<PantryState> {
   final PantryApi _api;
@@ -535,17 +539,12 @@ final pantryNotifierProvider =
 // --- Demo UI data for recipe screens (until real API is wired) ---
 final dashboardRecipesProvider =
     FutureProvider<List<Recipe>>((ref) async {
-  final api = ref.watch(pantryApiProvider);
   final userId = ref.watch(userIdProvider);
+  if (userId.isEmpty) return <Recipe>[];
 
-  // Recompute suggestions whenever the pantry contents change so the
-  // dashboard and results screens update automatically after adding items.
+  final api = ref.watch(pantryApiProvider);
   final pantryState = ref.watch(pantryNotifierProvider(userId));
-
-  // If this user has no pantry items yet, don't show any recipes.
-  if (pantryState.items.isEmpty) {
-    return <Recipe>[];
-  }
+  if (pantryState.items.isEmpty) return <Recipe>[];
 
   return api.fetchRecipeSuggestions(userId: userId);
 });

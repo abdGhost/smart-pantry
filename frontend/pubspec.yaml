@@ -44,6 +44,8 @@ dependencies:
   mobile_scanner: ^6.0.2
   shimmer: ^3.0.0
   carousel_slider: ^5.0.0
+  shared_preferences: ^2.3.3
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_native_splash: ^2.4.7

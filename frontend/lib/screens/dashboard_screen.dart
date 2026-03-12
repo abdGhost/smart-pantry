@@ -23,22 +23,29 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  @override
-  void initState() {
-    super.initState();
-    final userId = ref.read(userIdProvider);
-    // Kick off initial pantry load once widgets are ready.
-    Future.microtask(
-      () => ref
-          .read(pantryNotifierProvider(userId).notifier)
-          .loadPantry(),
-    );
-  }
+  String? _loadedUserId;
 
   @override
   Widget build(BuildContext context) {
-    final recipesAsync = ref.watch(dashboardRecipesProvider);
     final userId = ref.watch(userIdProvider);
+
+    // Wait for per-device user ID so each installation has its own data.
+    if (userId.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.creamBackground,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Load pantry once when this user ID is ready.
+    if (_loadedUserId != userId) {
+      _loadedUserId = userId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(pantryNotifierProvider(userId).notifier).loadPantry();
+      });
+    }
+
+    final recipesAsync = ref.watch(dashboardRecipesProvider);
     final pantryState = ref.watch(pantryNotifierProvider(userId));
     final media = MediaQuery.of(context);
     final screenWidth = media.size.width;
